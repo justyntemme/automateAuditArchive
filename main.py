@@ -60,6 +60,35 @@ def checkParam(paramName: str) -> str:
     return paramValue
 
 
+def isFalsePostive(audit):
+    # Define false positve values manually to easily add or remove flags that are flooding env
+    falsePositiveNamespaces = ["default", "test-namespace"]
+    falsePositiveCollections = ["dev", "test"]
+    falsePositiveRegions = ["us-west-1", "eu-central-1"]
+    # falsePositveTypes = ['container', 'function']
+    # above example shows how we might extend scope beyond container
+    falsePositveTypes = ["container"]
+    # These will always raise alert and return false for isFalsePostive
+    alertCategories = ["dataExfiltration", "malware", "lateralMovement"]
+    # Check for categories that must always raise an alert
+
+    if audit["category"] in alertCategories:
+        return False
+    # k8s namespace
+    if audit["labels"].get("namespace") in falsePositiveNamespaces:
+        return True
+    # Using collections // This is to ensure functionality can persist even if original query is not fine tuned
+    if falsePositiveCollections not in audit["collections"]:
+        return False
+    # If we want to ignore entire regions we can here
+    if audit["region"] in falsePositiveRegions:
+        return True
+    if audit["type"] in falsePositveTypes:
+        return True
+    # If no false positve detections are made then we assume this is not a FP INC
+    return False
+
+
 def main():
     P: Tuple[str, str, str] = ("pcIdentity", "pcSecret", "tlUrl")
     accessKey, accessSecret, _ = map(checkParam, P)
@@ -70,8 +99,11 @@ def main():
     )
 
     responseCode, content = getAudits(cwpToken) if cwpToken else (exit(1))
-    logging.info(responseCode)
+    print(content)
     logging.info(content)
+    audits = json.loads(content)
+    logging.info(f"Number of audits found: {len(audits)}")
+    logging.info(responseCode)
 
 
 if __name__ == "__main__":
