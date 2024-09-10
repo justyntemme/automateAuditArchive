@@ -16,7 +16,10 @@ pcUrl = os.environ.get("pcUrl")
 
 def getAudits(token: str) -> Tuple[int, str]:
     scanURL = (
-        tlUrl + "/api/v1/audits/incidents?limit=1" if tlUrl is not None else exit(1)
+        # using type=container for testing, will allow for other types in the future
+        tlUrl + "/api/v1/audits/incidents?limit=10&type=container&type=malware"
+        if tlUrl is not None
+        else exit(1)
     )
     headers = {
         "accept": "application/json; charset=UTF-8",
@@ -65,6 +68,7 @@ def isFalsePostive(audit):
     falsePositiveNamespaces = ["default", "test-namespace"]
     falsePositiveCollections = ["dev", "test"]
     falsePositiveRegions = ["us-west-1", "eu-central-1"]
+    # TODO figure out how to scope by rulename and use that as a data point
     # falsePositveTypes = ['container', 'function']
     # above example shows how we might extend scope beyond container
     falsePositveTypes = ["container"]
@@ -74,8 +78,15 @@ def isFalsePostive(audit):
 
     if audit["category"] in alertCategories:
         return False
-    # k8s namespace
-    if audit["labels"].get("namespace") in falsePositiveNamespaces:
+    for audit in audit["audits"]:
+        if audit["hostname"] in alertCategories:
+            return True
+            # elif audit["rulename"] == "testRulename":
+            return False
+        elif audit["namespace"] in falsePositiveNamespaces:
+            return False
+        # k8s namespace
+        # if audit["labels"].get("namespace") in falsePositiveNamespaces:
         return True
     # Using collections // This is to ensure functionality can persist even if original query is not fine tuned
     if falsePositiveCollections not in audit["collections"]:
@@ -99,11 +110,11 @@ def main():
     )
 
     responseCode, content = getAudits(cwpToken) if cwpToken else (exit(1))
-    print(content)
     logging.info(content)
     audits = json.loads(content)
     logging.info(f"Number of audits found: {len(audits)}")
     logging.info(responseCode)
+    print(isFalsePostive(audits[0]))
 
 
 if __name__ == "__main__":

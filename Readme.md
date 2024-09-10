@@ -15,4 +15,7 @@ https://pan.dev/compute/api/32-07/patch-audits-incidents-acknowledge-id/
 
 https://pan.dev/compute/api/32-07/get-audits-incidents/
 
+#### Notes
+Each response json structure is unique and may have a "type" within the audits or may have other data. the script will have to first take into account the type of response it's getting, or simply use the fine tuned query to get each type and treat them as needed
 
+TODO add scoped queries to handle different json data structures within the different hosts/container types and use the values in the correct places as well as using the correct Values
