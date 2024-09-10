@@ -14,9 +14,11 @@ tlUrl = os.environ.get("tlUrl")
 pcUrl = os.environ.get("pcUrl")
 
 
-def getScans(token: str) -> Tuple[int, str]:
+def getAudits(token: str) -> Tuple[int, str]:
     scanURL = (
-        tlUrl + "/api/v1/audits/runtime/container" if tlUrl is not None else exit(1)
+        tlUrl + "/api/v1/audits/runtime/container?limit=1&fields=collections"
+        if tlUrl is not None
+        else exit(1)
     )
     headers = {
         "accept": "application/json; charset=UTF-8",
@@ -69,7 +71,7 @@ def main():
         else (None, None)
     )
 
-    responseCode, content = getScans(cwpToken) if cwpToken else (exit(1))
+    responseCode, content = getAudits(cwpToken) if cwpToken else (exit(1))
     logging.info(responseCode)
     logging.info(content)
 
