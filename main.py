@@ -66,35 +66,45 @@ def checkParam(paramName: str) -> str:
 def isFalsePostive(audit):
     # Define false positve values manually to easily add or remove flags that are flooding env
     falsePositiveNamespaces = ["default", "test-namespace"]
-    falsePositiveCollections = ["dev", "test"]
+    falsePositiveCollections = ["dev", "test", "test-test"]
     falsePositiveRegions = ["us-west-1", "eu-central-1"]
     # TODO figure out how to scope by rulename and use that as a data point
     # falsePositveTypes = ['container', 'function']
     # above example shows how we might extend scope beyond container
-    falsePositveTypes = ["container"]
+    # falsePositveTypes = ["container"]
     # These will always raise alert and return false for isFalsePostive
-    alertCategories = ["dataExfiltration", "malware", "lateralMovement"]
+    alertCategories = ["dataExfiltration", "malware", "highjackedProcess"]
     # Check for categories that must always raise an alert
 
+    # Root document level analysis, contains
+    # collections but doesn't report invidivual audits
     if audit["category"] in alertCategories:
+        # logging.info("Category found in alertCategories")
         return False
+
+    if falsePositiveCollections not in audit["collections"]:
+        # logging.info("Collection found in alertCollection")
+        return True
+
+    # iterate over audits object
     for audit in audit["audits"]:
         if audit["hostname"] in alertCategories:
+            # logging.info("hostname found in alertHostnames")
             return True
             # elif audit["rulename"] == "testRulename":
             return False
         elif audit["namespace"] in falsePositiveNamespaces:
             return False
+        elif audit["attackTechniques"] == "nativeBinaryExecution":
+            return False
         # k8s namespace
         # if audit["labels"].get("namespace") in falsePositiveNamespaces:
-        return True
-    # Using collections // This is to ensure functionality can persist even if original query is not fine tuned
-    if falsePositiveCollections not in audit["collections"]:
+        # Using collections // This is to ensure functionality can persist even if original query is not fine tuned
         return False
     # If we want to ignore entire regions we can here
     if audit["region"] in falsePositiveRegions:
-        return True
-    if audit["type"] in falsePositveTypes:
+        return False
+        # if audit["type"] in falsePositveTypes:
         return True
     # If no false positve detections are made then we assume this is not a FP INC
     return False
@@ -114,7 +124,8 @@ def main():
     audits = json.loads(content)
     logging.info(f"Number of audits found: {len(audits)}")
     logging.info(responseCode)
-    print(isFalsePostive(audits[0]))
+    for audit in audits:
+        print(isFalsePostive(audit))
 
 
 if __name__ == "__main__":
