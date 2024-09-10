@@ -127,6 +127,9 @@ def main():
     for audit in audits:
         print(isFalsePostive(audit))
 
+    # TODO
+    # build array of false positives and call to archive endpoint for each of those values
+
 
 if __name__ == "__main__":
     main()
