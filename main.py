@@ -16,9 +16,7 @@ pcUrl = os.environ.get("pcUrl")
 
 def getAudits(token: str) -> Tuple[int, str]:
     scanURL = (
-        tlUrl + "/api/v1/audits/runtime/container?limit=1&fields=collections"
-        if tlUrl is not None
-        else exit(1)
+        tlUrl + "/api/v1/audits/incidents?limit=1" if tlUrl is not None else exit(1)
     )
     headers = {
         "accept": "application/json; charset=UTF-8",
